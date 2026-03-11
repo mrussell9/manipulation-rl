@@ -1,0 +1,1 @@
+from .cobot import COBOT_FIXED_BASE_CFG

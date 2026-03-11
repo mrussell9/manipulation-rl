@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="cobot_collision">
+
+  <material name="cobot_silver">
+    <color rgba="0.700 0.700 0.700 1.000"/>
+  </material>
+
+  <!-- Parameters you can tweak at instantiation -->
+  <xacro:macro name="cobot_collision" params="
+      mount_link:=base_link
+      base_xyz:='0 0 -0.387'
+      base_radius:=0.3
+      base_height:=0.162
+      tower_size:='0.125 0.125 0.306'
+      tower_xyz:='0 0 -0.154'
+      touchscreen_mount_xyz:='-0.065 0 -0.07'
+      touchscreen_xyz:='-0.086 0.15 0.06'
+      touchscreen_rpy:='0.78 0 -1.5708'
+      supporter_460_size:='0.025 0.025 0.46'
+      supporter_460_xyz:='-0.0188 -0.168 -0.06'
+      supporter_580_size:='0.025 0.025 0.58'
+      supporter_580_xyz:='-0.0188 -0.387 0.24'
+      camera_bracket_xyz:='0.001 -0.387 0.497'
+      kinect_xyz:='0.06 -0.387 0.515'
+      kinect_rpy:='1.8326 0 1.5708'
+      ">
+
+    <link name="cobot_base">
+      <collision>
+        <origin xyz="${base_xyz}" rpy="0 0 0"/>
+        <geometry>
+            <cylinder radius="${base_radius}" length="${base_height}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="cobot_base_fixed" type="fixed">
+      <parent link="${mount_link}"/>
+      <child  link="cobot_base"/>
+    </joint>
+
+    <link name="cobot_tower">
+      <collision>
+        <origin xyz="${tower_xyz}" rpy="0 0 0"/>
+        <geometry>
+          <box size="${tower_size}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="cobot_tower_fixed" type="fixed">
+      <parent link="cobot_base"/>
+      <child  link="cobot_tower"/>
+    </joint>
+
+    <link name="touchscreen_mount">
+      <collision>
+        <origin xyz="${touchscreen_mount_xyz}" rpy="0 0 -1.5708"/>
+        <geometry>
+        <mesh filename="package://kortex_description/meshes/touchscreen_mount.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="touchscreen_mount_fixed" type="fixed">
+      <parent link="cobot_tower"/>
+      <child  link="touchscreen_mount"/>
+    </joint>
+
+    <link name="touchscreen">
+      <collision>
+        <origin xyz="${touchscreen_xyz}" rpy="${touchscreen_rpy}"/>
+        <geometry>
+        <mesh filename="package://kortex_description/meshes/touchscreen.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="touchscreen_fixed" type="fixed">
+      <parent link="touchscreen_mount"/>
+      <child  link="touchscreen"/>
+    </joint>
+
+    <link name="supporter_460">
+      <collision>
+        <origin xyz="${supporter_460_xyz}" rpy="1.5708 1.5708 0"/>
+        <geometry>
+          <box size="${supporter_460_size}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="supporter_460_fixed" type="fixed">
+      <parent link="cobot_tower"/>
+      <child  link="supporter_460"/>
+    </joint>
+
+    <link name="supporter_580">
+      <collision>
+        <origin xyz="${supporter_580_xyz}" rpy="0 0 0"/>
+        <geometry>
+          <box size="${supporter_580_size}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="supporter_580_fixed" type="fixed">
+      <parent link="cobot_tower"/>
+      <child  link="supporter_580"/>
+    </joint>
+
+    <link name="camera_bracket">
+      <collision>
+        <origin xyz="${camera_bracket_xyz}" rpy="0 0 1.5708"/>
+        <geometry>
+        <mesh filename="package://kortex_description/meshes/camera_bracket.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="camera_bracket_fixed" type="fixed">
+      <parent link="cobot_tower"/>
+      <child  link="camera_bracket"/>
+    </joint>
+
+    <link name="kinect">
+      <collision>
+        <origin xyz="${kinect_xyz}" rpy="${kinect_rpy}"/>
+        <geometry>
+        <mesh filename="package://kortex_description/meshes/kinect.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="kinect_fixed" type="fixed">
+      <parent link="camera_bracket"/>
+      <child  link="kinect"/>
+    </joint>
+
+    <link name="kinect_ablated">
+      <collision>
+        <origin xyz="${kinect_xyz}" rpy="${kinect_rpy}"/>
+        <geometry>
+          <!-- <box size="0.11 0.05 0.2"/> -->
+          <!-- alate 4cm -->
+          <box size="0.15 0.09 0.24"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="kinect_ablated_fixed" type="fixed">
+      <parent link="camera_bracket"/>
+      <child  link="kinect_ablated"/>
+    </joint>
+
+  </xacro:macro>
+</robot>

@@ -1,0 +1,202 @@
+<?xml version="1.0" ?>
+<robot name="cobot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:macro name="cobot" params="prefix">
+
+<xacro:include filename="$(find cobot_description)/urdf/materials.xacro" />
+<xacro:include filename="$(find cobot_description)/urdf/cobot.trans" />
+<xacro:include filename="$(find cobot_description)/urdf/cobot.gazebo" />
+
+<link name="${prefix}base_link">
+  <inertial>
+    <origin xyz="0.004518 0.003782 -0.023908" rpy="0 0 0"/> 
+    <mass value="317800"/>
+    <inertia ixx="6.196" iyy="8.576" izz="5.573" ixy="-0.2254" iyz="-0.05173" ixz="-0.002643"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="cobot_silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<!-- arm_link removed: was mocked Kinova arm from Fusion -->
+<!-- Real Kinova arm now mounts directly to tower_link -->
+
+<link name="${prefix}tower_link">
+  <inertial>
+    <origin xyz="-0.004228682499030221 0.27828016243522474 -0.13390171776641763" rpy="0 0 0"/>
+    <mass value="9.740622494426086"/>
+    <inertia ixx="0.387337" iyy="0.053274" izz="0.362911" ixy="3e-06" iyz="-1.2e-05" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/tower_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="cobot_silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/tower_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="${prefix}camera_mount_link">
+  <inertial>
+    <origin xyz="0.3736008189733288 0.477366826897979 0.06509007288610352" rpy="0 0 0"/>
+    <mass value="7.458394551273814"/>
+    <inertia ixx="0.545028" iyy="0.216041" izz="0.329949" ixy="0.0" iyz="-0.013955" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/camera_mount_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="cobot_silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/camera_mount_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="${prefix}camera_bracket_15deg_link">
+  <inertial>
+    <origin xyz="0.018878034262298816 0.9612624474176844 -0.20250839826954536" rpy="0 0 0"/>
+    <mass value="0.12679248702603627"/>
+    <inertia ixx="3.4e-05" iyy="4e-05" izz="6e-05" ixy="-1.1e-05" iyz="0.0" ixz="-0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/camera_bracket_15deg_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="cobot_silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/camera_bracket_15deg_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="${prefix}touchscreen_mount_link">
+  <inertial>
+    <origin xyz="-0.10257061989588813 0.35952664019428554 -0.280317930464361" rpy="0 0 0"/>
+    <mass value="2.104428558084481"/>
+    <inertia ixx="0.005247" iyy="0.003705" izz="0.005079" ixy="0.001211" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/touchscreen_mount_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="cobot_silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/touchscreen_mount_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="${prefix}touchscreen_link">
+  <inertial>
+    <origin xyz="-0.28631139458904464 0.4916227921795838 -0.15906439759053917" rpy="0 0 0"/>
+    <mass value="2.507604"/>
+    <inertia ixx="0.032594" iyy="0.032594" izz="0.010117" ixy="-0.005055" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/touchscreen_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="cobot_silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/touchscreen_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="${prefix}kinect_link">
+  <inertial>
+    <origin xyz="0.03237959018446581 1.0633540891953976 0.3390346686197424" rpy="0 0 0"/>
+    <mass value="2.454337583446389"/>
+    <inertia ixx="0.0024" iyy="0.005054" izz="0.003691" ixy="0.001017" iyz="-0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/kinect_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="cobot_silver"/>
+  </visual>
+  <collision>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="package://cobot_description/meshes/kinect_link.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<!-- Rigid 4 joint removed: connected tower_link to mocked arm_link -->
+<!-- Kinova arm now mounts directly to tower_link via kinova.urdf.xacro -->
+<!-- Original mount transform preserved below for reference: -->
+<!-- <origin xyz="0.064742 -0.009761 -0.165019" rpy="1.570796 -1.570796 0.0"/> -->
+
+<joint name="${prefix}Rigid 5" type="fixed">
+  <origin xyz="0 0 0.110" rpy="0.0 0.0 3.141593"/>
+  <parent link="${prefix}base_link"/>
+  <child link="${prefix}tower_link"/>
+</joint>
+
+<joint name="${prefix}Rigid 9" type="fixed">
+  <origin xyz="-0.3950 0.0170 0.27120" rpy="0.0 -0.0 -3.141593"/>
+  <parent link="${prefix}tower_link"/>
+  <child link="${prefix}camera_mount_link"/>
+</joint>
+
+<joint name="${prefix}Rigid 10" type="fixed">
+  <origin xyz="-0.01270 0.019648 0.56090" rpy="-0.0 0.0 3.141593"/>
+  <parent link="${prefix}camera_mount_link"/>
+  <child link="${prefix}camera_bracket_15deg_link"/>
+</joint>
+
+<joint name="${prefix}Rigid 13" type="fixed">
+  <origin xyz="0.00070 0.0610 0.25570" rpy="-0.0 -0.0 3.141593"/>
+  <parent link="${prefix}tower_link"/>
+  <child link="${prefix}touchscreen_mount_link"/>
+</joint>
+
+<joint name="${prefix}Rigid 14" type="fixed">
+  <origin xyz="0.144498 -0.021201 0.134456" rpy="2.356194 -0.0 3.141593"/>
+  <parent link="${prefix}touchscreen_mount_link"/>
+  <child link="${prefix}touchscreen_link"/>
+</joint>
+
+<joint name="${prefix}Rigid 16" type="fixed">
+  <origin xyz="0 -0.061639 0.019354" rpy="1.832596 -0.0 -0.0"/>
+  <parent link="${prefix}camera_bracket_15deg_link"/>
+  <child link="${prefix}kinect_link"/>
+</joint>
+
+</xacro:macro>
+</robot>

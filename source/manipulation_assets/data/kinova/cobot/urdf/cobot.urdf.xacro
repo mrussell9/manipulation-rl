@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<robot name="cobot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Use Xacro's find -->
+  <xacro:include filename="$(find cobot_description)/urdf/cobot_macro.urdf.xacro"/>
+
+  <!-- Call the macro (required) -->
+  <xacro:cobot prefix=""/>
+</robot>
