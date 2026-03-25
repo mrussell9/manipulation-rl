@@ -10,6 +10,8 @@
 import argparse
 import sys
 
+from pathlib import Path
+
 from isaaclab.app import AppLauncher
 
 # local imports
@@ -38,14 +40,40 @@ parser.add_argument("--wandb_policy", action="store_true", default=False, help="
 parser.add_argument("--wandb_run", type=str, default="", help="WandB run path (e.g. 'username/project/run_id').")
 parser.add_argument("--wandb_model", type=str, default="", help="Name of the model artifact to load from WandB.")
 
+# Dataset recording (LeRobot)
+parser.add_argument(
+    "--record_dataset",
+    action="store_true",
+    default=False,
+    help="Record observations/actions to a local LeRobot dataset under /data/openpi/fine_tune/",
+)
+parser.add_argument(
+    "--dataset_root",
+    type=str,
+    default="/data/openpi/fine_tune",
+    help="Parent directory where the LeRobot dataset folder will be created.",
+)
+parser.add_argument(
+    "--dataset_repo_id",
+    type=str,
+    default="isaac_franka_block_pick",
+    help="Local dataset name (folder) to write under dataset_root.",
+)
+parser.add_argument(
+    "--dataset_task",
+    type=str,
+    default="Pick up the red block and hold it",
+    help="Task string to store in the dataset (used for prompt/task conditioning).",
+)
+
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
 args_cli, hydra_args = parser.parse_known_args()
-# always enable cameras to record video
-if args_cli.video:
+# always enable cameras when video or dataset recording is enabled
+if args_cli.video or args_cli.record_dataset:
     args_cli.enable_cameras = True
 
 # clear out sys.argv for Hydra
@@ -62,7 +90,7 @@ import time
 
 import gymnasium as gym
 import torch
-from rsl_rl.runners import DistillationRunner, OnPolicyRunner
+from manipulation_tasks.reinforcement_learning.pick_up_block.runners import BlockRunner as OnPolicyRunner
 
 from isaaclab.envs import (
     DirectMARLEnv,
@@ -84,6 +112,15 @@ from isaaclab_tasks.utils.hydra import hydra_task_config
 from manipulation_utils.wandb_utils import load_wandb_policy
 
 # PLACEHOLDER: Extension template (do not remove this comment)
+
+
+def _to_uint8_chw_image(tensor: torch.Tensor):
+    """Convert IsaacLab RGB (HWC uint8/float) tensor to numpy CHW uint8."""
+    img = tensor.squeeze().detach().cpu()
+    img = img.clamp(0, 255).to(torch.uint8)
+    img_np = img.numpy()
+    # IsaacLab: HWC -> LeRobot/OpenPI: CHW
+    return img_np.transpose(2, 0, 1)
 
 
 @hydra_task_config(args_cli.task, args_cli.agent)
@@ -188,33 +225,91 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     dt = env.unwrapped.step_dt
 
+    dataset = None
+    if args_cli.record_dataset:
+        # Import only when needed so play works without lerobot installed.
+        from lerobot.datasets.lerobot_dataset import LeRobotDataset  # noqa: PLC0415
+
+        dataset_root = Path(args_cli.dataset_root)
+        dataset = LeRobotDataset.create(
+            repo_id=args_cli.dataset_repo_id,
+            root=dataset_root,
+            fps=int(1.0 / dt) if dt > 0 else 50,
+            robot_type="franka_panda",
+            features={
+                "observation.images.wrist": {"dtype": "video", "shape": (3, 224, 224), "names": ["channels", "height", "width"]},
+                "observation.images.base": {"dtype": "video", "shape": (3, 224, 224), "names": ["channels", "height", "width"]},
+                "observation.state": {
+                    "dtype": "float32",
+                    "shape": (8,),
+                    "names": ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6", "gripper"],
+                },
+                "action": {
+                    "dtype": "float32",
+                    "shape": (8,),
+                    "names": ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6", "gripper"],
+                },
+            },
+        )
+
     # reset environment
     obs = env.get_observations()
+    import pdb; pdb.set_trace()
     timestep = 0
     # simulate environment
-    while simulation_app.is_running():
-        start_time = time.time()
-        # run everything in inference mode
-        with torch.inference_mode():
-            # agent stepping
-            actions = policy(obs)
-            # env stepping
-            obs, _, dones, _ = env.step(actions)
-            # reset recurrent states for episodes that have terminated
-            policy_nn.reset(dones)
-        if args_cli.video:
-            timestep += 1
-            # Exit the play loop after recording one video
-            if timestep == args_cli.video_length:
-                break
+    try:
+        while simulation_app.is_running():
+            start_time = time.time()
+            # run everything in inference mode
+            with torch.inference_mode():
+                # agent stepping
+                actions = policy(obs)
 
-        # time delay for real-time evaluation
-        sleep_time = dt - (time.time() - start_time)
-        if args_cli.real_time and sleep_time > 0:
-            time.sleep(sleep_time)
+                if dataset is not None:
+                    # These keys assume your env exposes camera observations under obs["camera"] and vector obs under obs["policy"].
+                    wrist_img = _to_uint8_chw_image(obs["camera"]["wrist_camera"])
+                    base_img = _to_uint8_chw_image(obs["camera"]["base_camera"])
+                    state = obs["policy"][:, 0:8].squeeze().cpu().numpy()
+                    act = actions.squeeze().cpu().numpy()
+                    dataset.add_frame(
+                        {
+                            "observation.images.wrist": wrist_img,
+                            "observation.images.base": base_img,
+                            "observation.state": state,
+                            "action": act,
+                            "task": args_cli.dataset_task,
+                        }
+                    )
 
-    # close the simulator
-    env.close()
+                # env stepping
+                obs, _, dones, _ = env.step(actions)
+
+                if dataset is not None and dones.any():
+                    dataset.save_episode()
+
+                # reset recurrent states for episodes that have terminated
+                policy_nn.reset(dones)
+
+            if args_cli.video:
+                timestep += 1
+                # Exit the play loop after recording one video
+                if timestep == args_cli.video_length:
+                    break
+
+            # time delay for real-time evaluation
+            sleep_time = dt - (time.time() - start_time)
+            if args_cli.real_time and sleep_time > 0:
+                time.sleep(sleep_time)
+    finally:
+        # close the simulator
+        env.close()
+
+        if dataset is not None:
+            # Important: closes parquet writers and writes footers/metadata.
+            try:
+                dataset.finalize()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":
